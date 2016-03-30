@@ -2,7 +2,13 @@ Measure bandwidth simultanously
 ===============================
 As the CUDA samples program `bandwidthTest` is insufficient for measuring
 the bandwidth to multiple CUDA devices, this program uses CUDA streams in
-order to start multiple simultanous `cudaMemcpyAsync()` transfers.
+order to attempt to start multiple simultanous `cudaMemcpyAsync()` transfers.
+
+To verify that transfers were started at the same time, use the NVIDIA
+Visual Profiler (`nvvp`). Judging by our preliminary results, however, it
+seems that the CUDA driver will only transfer simultaneously if the transfer
+is slow enough.
+
 
 Usage
 -------------------------------
@@ -14,7 +20,7 @@ Description
     transfers between host and multiple CUDA devices using cudaMemcpyAsync().
 
 Program options
-  --streams=<mode>`      stream modes for transfers
+  --streams=<mode>     stream modes for transfers
   --list               list available CUDA devices and quit
   --help               show this help text and quit
 
