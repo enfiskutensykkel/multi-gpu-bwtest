@@ -70,9 +70,9 @@ static void listDevices()
         throw runtime_error(cudaGetErrorString(err));
     }
 
-    fprintf(stderr, "\n %2s   %-20s   %-9s   %8s   %8s   %8s   %2s\n",
-            "ID", "Device name", "IO addr", "Managed", "Unified", "Mappable", "#");
-    fprintf(stderr, "-----------------------------------------------------------------------------\n");
+    fprintf(stderr, "\n %2s   %-15s   %-9s   %7s   %7s   %7s   %8s   %2s\n",
+            "ID", "Device name", "IO addr", "Compute", "Managed", "Unified", "Mappable", "#");
+    fprintf(stderr, "-------------------------------------------------------------------------------\n");
     for (int i = 0; i < deviceCount; ++i)
     {
         cudaDeviceProp prop;
@@ -88,8 +88,9 @@ static void listDevices()
             continue;
         }
 
-        fprintf(stderr, " %2d   %-20s   %02x:%02x.%-3x   %8s   %8s   %8s   %2d\n",
+        fprintf(stderr, " %2d   %-15s   %02x:%02x.%-3x   %4d.%-2d   %7s   %7s   %8s   %2d\n",
                 i, prop.name, prop.pciBusID, prop.pciDeviceID, prop.pciDomainID,
+                prop.major, prop.minor, 
                 prop.managedMemory ? "yes" : "no", 
                 prop.unifiedAddressing ? "yes" : "no",
                 prop.canMapHostMemory ? "yes" : "no",
