@@ -56,27 +56,26 @@ static void timeTransfers(const vector<TransferSpec>& transferSpecs)
 
     for (const TransferSpec& spec : transferSpecs)
     {
-        cudaStream_t stream = *spec.cudaStream;
+        cudaStream_t stream = *spec.stream;
         const DeviceBufferPtr& deviceBuffer = spec.deviceBuffer;
         const HostBufferPtr& hostBuffer = spec.hostBuffer;
 
         const void* src = spec.direction == cudaMemcpyDeviceToHost ? deviceBuffer->buffer : hostBuffer->buffer;
         void* dst = spec.direction == cudaMemcpyDeviceToHost ? hostBuffer->buffer : deviceBuffer->buffer;
-        size_t size = min(deviceBuffer->length, hostBuffer->length); 
 
-        err = cudaEventRecord(spec.cudaEvents->started, stream);
+        err = cudaEventRecord(spec.events->started, stream);
         if (err != cudaSuccess)
         {
             throw runtime_error(cudaGetErrorString(err));
         }
 
-        err = cudaMemcpyAsync(dst, src, size, spec.direction, stream);
+        err = cudaMemcpyAsync(dst, src, spec.length, spec.direction, stream);
         if (err != cudaSuccess)
         {
             throw runtime_error(cudaGetErrorString(err));
         }
 
-        err = cudaEventRecord(spec.cudaEvents->stopped, stream);
+        err = cudaEventRecord(spec.events->stopped, stream);
         if (err != cudaSuccess)
         {
             throw runtime_error(cudaGetErrorString(err));
@@ -91,7 +90,7 @@ static void syncStreams(const vector<TransferSpec>& transferSpecs)
 
     for (const TransferSpec& spec : transferSpecs)
     {
-        err = cudaStreamSynchronize(*spec.cudaStream);
+        err = cudaStreamSynchronize(*spec.stream);
         if (err != cudaSuccess)
         {
             throw runtime_error(cudaGetErrorString(err));
@@ -115,7 +114,7 @@ void runBandwidthTest(const vector<TransferSpec>& transferSpecs)
     // Execute transfers
     try
     {
-        fprintf(stdout, "Executing transfers.....");
+        fprintf(stdout, "Executing transfers..........");
         fflush(stdout);
         timeTransfers(transferSpecs);
         fprintf(stdout, "DONE\n");
@@ -131,7 +130,7 @@ void runBandwidthTest(const vector<TransferSpec>& transferSpecs)
     // Synchronize all streams
     try
     {
-        fprintf(stdout, "Synchronizing streams...");
+        fprintf(stdout, "Synchronizing streams........");
         fflush(stdout);
 
         syncStreams(transferSpecs);
@@ -173,11 +172,10 @@ void runBandwidthTest(const vector<TransferSpec>& transferSpecs)
 
     for (const TransferSpec& res : transferSpecs)
     {
-        size_t size = min(res.deviceBuffer->length, res.hostBuffer->length);
-        double elapsed = res.cudaEvents->usecs();
-        double bandwidth = (double) size / elapsed;
+        double elapsed = res.events->usecs();
+        double bandwidth = (double) res.length / elapsed;
 
-        totalSize += size;
+        totalSize += res.length;
         aggrElapsed += elapsed;
 
         cudaDeviceProp prop;
@@ -194,7 +192,7 @@ void runBandwidthTest(const vector<TransferSpec>& transferSpecs)
         fprintf(stdout, " %2d   %-15s   %13s    %8s   %9.0f µs    %10.2f MiB/s \n",
                 res.deviceBuffer->device, 
                 prop.name, 
-                bytesToUnit(size).c_str(), 
+                bytesToUnit(res.length).c_str(), 
                 transferDirectionToString(res.direction).c_str(),
                 elapsed,
                 bandwidth

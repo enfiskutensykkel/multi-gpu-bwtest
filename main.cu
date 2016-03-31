@@ -238,7 +238,7 @@ static void parseTransferSpecification(vector<TransferSpec>& transferSpecs, char
     // Try to allocate buffers and create transfer specification
     try
     {
-        fprintf(stdout, "Allocating buffers......");
+        fprintf(stdout, "Allocating buffers...........");
         fflush(stdout);
 
         for (cudaMemcpyKind transferMode : directions)
@@ -246,6 +246,8 @@ static void parseTransferSpecification(vector<TransferSpec>& transferSpecs, char
             for (int device : devices)
             {
                 TransferSpec spec;
+                spec.device = device;
+                spec.length = size;
                 spec.deviceBuffer = DeviceBufferPtr(new DeviceBuffer(device, size)); // FIXME: Managed memory
                 spec.hostBuffer = HostBufferPtr(new HostBuffer(size, hostAllocFlags));
                 spec.direction = transferMode;
@@ -360,8 +362,8 @@ int main(int argc, char** argv)
         // Create streams and timing events
         for (TransferSpec& spec : transferSpecs)
         {
-            spec.cudaStream = retrieveStream(spec.deviceBuffer->device, streamMode);
-            spec.cudaEvents = createTimingData();
+            spec.stream = retrieveStream(spec.deviceBuffer->device, streamMode); // FIXME: we need a better model for streams
+            spec.events = createTimingData();
         }
 
         // Run bandwidth test

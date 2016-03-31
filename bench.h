@@ -10,11 +10,13 @@
 
 struct TransferSpec
 {
-    DeviceBufferPtr             deviceBuffer;
-    HostBufferPtr               hostBuffer;
-    StreamPtr                   cudaStream;
-    cudaMemcpyKind              direction;
-    TimingDataPtr               cudaEvents;
+    int             device;
+    size_t          length;
+    DeviceBufferPtr deviceBuffer;
+    HostBufferPtr   hostBuffer;
+    StreamPtr       stream;
+    cudaMemcpyKind  direction;
+    TimingDataPtr   events;
 };
 
 

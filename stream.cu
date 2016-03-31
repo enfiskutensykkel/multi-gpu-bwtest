@@ -8,7 +8,7 @@
 using std::runtime_error;
 typedef std::map<int, StreamPtr> StreamMap;
 
-static StreamMap streams;
+static StreamMap streams; // FIXME: this neads to be cleared, maybe rewrite into passing it around?
 
 
 static void deleteStream(cudaStream_t* stream)
