@@ -1,5 +1,5 @@
 Measure bandwidth simultanously
-===============================
+===============================================================================
 As the CUDA samples program `bandwidthTest` is insufficient for measuring
 the bandwidth to multiple CUDA devices, this program uses CUDA streams in
 order to attempt to start multiple simultanous `cudaMemcpyAsync()` transfers.
@@ -10,10 +10,18 @@ seems that the CUDA driver will only transfer simultaneously if the transfer
 is slow enough.
 
 
+Requirements
+-------------------------------------------------------------------------------
+  - One or more CUDA capabable devices (NVIDIA GPUs)
+  - CUDA version 7.0 or higher
+  - `gcc` or `clang` with support for C++11
+  - Make (for example GNU Make)
+
+
 Usage
--------------------------------
+-------------------------------------------------------------------------------
 ```
-Usage: ./bwtest --transfer=<transfer specs>... [--streams=<mode>] [--list] [--help]
+Usage: ./bwtest --transfer=<transfer specs>... [--streams=<mode>] 
 
 Description
     This program uses multiple CUDA streams in an attempt at optimizing data
@@ -52,3 +60,4 @@ Memory options
   managed              allocate managed memory on the device
   wc                   allocate write-combined memory on the host
 ```
+

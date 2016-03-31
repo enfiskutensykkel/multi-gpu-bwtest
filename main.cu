@@ -18,7 +18,8 @@ using namespace std;
 
 static void showUsage(const char* fname)
 {
-    fprintf(stderr, "Usage: %s --transfer=<transfer specs>... [--streams=<mode>] [--list] [--help]\n" 
+    fprintf(stderr, 
+            "Usage: %s --transfer=<transfer specs>... [--streams=<mode>]\n" 
             "\nDescription\n"
             "    This program uses multiple CUDA streams in an attempt at optimizing data\n"
             "    transfers between host and multiple CUDA devices using cudaMemcpyAsync().\n"
