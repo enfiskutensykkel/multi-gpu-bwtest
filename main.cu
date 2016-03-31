@@ -19,7 +19,7 @@ using namespace std;
 static void showUsage(const char* fname)
 {
     fprintf(stderr, 
-            "Usage: %s --transfer=<transfer specs>... [--streams=<mode>]\n" 
+            "Usage: %s --do=<transfer specs>... [--streams=<mode>]\n" 
             "\nDescription\n"
             "    This program uses multiple CUDA streams in an attempt at optimizing data\n"
             "    transfers between host and multiple CUDA devices using cudaMemcpyAsync().\n"
@@ -274,6 +274,8 @@ static void parseArguments(int argc, char** argv, StreamSharingMode& streamMode,
     // Define program arguments
     const option opts[] = {
         { .name = "transfer", .has_arg = 1, .flag = NULL, .val = 't' },
+        { .name = "run", .has_arg = 1, .flag = NULL, .val = 't' },
+        { .name = "do", .has_arg = 1, .flag = NULL, .val = 't' },
         { .name = "streams", .has_arg = 1, .flag = NULL, .val = 's' },
         { .name = "list", .has_arg = 0, .flag = NULL, .val = 'l' },
         { .name = "help", .has_arg = 0, .flag = NULL, .val = 'h' },

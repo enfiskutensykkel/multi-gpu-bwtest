@@ -21,7 +21,7 @@ Requirements
 Usage
 -------------------------------------------------------------------------------
 ```
-Usage: ./bwtest --transfer=<transfer specs>... [--streams=<mode>] 
+Usage: ./bwtest --do=<transfer specs>... [--streams=<mode>] 
 
 Description
     This program uses multiple CUDA streams in an attempt at optimizing data
@@ -61,3 +61,61 @@ Memory options
   wc                   allocate write-combined memory on the host
 ```
 
+
+Example runs
+-------------------------------------------------------------------------------
+```
+jonas@alpha:~/multi-gpu-bwtest$ ./bwtest --list
+
+ ID   Device name            IO addr      Managed    Unified   Mappable    #
+-----------------------------------------------------------------------------
+  0   Tesla K40c             08:00.0          yes        yes        yes    2
+  1   Quadro K2200           03:00.0          yes        yes        yes    1
+  2   Tesla K40c             04:00.0          yes        yes        yes    2
+  3   GeForce GTX 750        04:01.0          yes        yes        yes    1
+  4   Quadro K2000           04:02.0          yes        yes        yes    1
+
+jonas@alpha:~/multi-gpu-bwtest$ ./bwtest --do=all:1024:both
+Allocating buffers......DONE
+Executing transfers.....DONE
+Synchronizing streams...DONE
+
+=====================================================================================
+ ID   Device name       Transfer size   Direction   Time elapsed   Bandwidth 
+-------------------------------------------------------------------------------------
+  0   Tesla K40c             1.00 KiB        HtoD          30 µs         34.15 MiB/s 
+  1   Quadro K2200           1.00 KiB        HtoD          37 µs         27.75 MiB/s 
+  2   Tesla K40c             1.00 KiB        HtoD          46 µs         22.44 MiB/s 
+  3   GeForce GTX 750        1.00 KiB        HtoD          51 µs         20.18 MiB/s 
+  4   Quadro K2000           1.00 KiB        HtoD          23 µs         43.84 MiB/s 
+  0   Tesla K40c             1.00 KiB        DtoH          34 µs         30.05 MiB/s 
+  1   Quadro K2200           1.00 KiB        DtoH          26 µs         39.41 MiB/s 
+  2   Tesla K40c             1.00 KiB        DtoH          43 µs         23.92 MiB/s 
+  3   GeForce GTX 750        1.00 KiB        DtoH          35 µs         29.52 MiB/s 
+  4   Quadro K2000           1.00 KiB        DtoH          19 µs         54.61 MiB/s 
+=====================================================================================
+
+Aggregated total time      :          343 µs
+Aggregated total bandwidth :        29.86 MiB/s
+Estimated elapsed time     :          412 µs
+Timed total bandwidth      :        24.88 MiB/s
+
+jonas@alpha:~/multi-gpu-bwtest$ ./bwtest --do=0:DtoH:$((64 * 1024 * 102)):mapped --do=2:1024:HtoD
+Allocating buffers......DONE
+Allocating buffers......DONE
+Executing transfers.....DONE
+Synchronizing streams...DONE
+
+=====================================================================================
+ ID   Device name       Transfer size   Direction   Time elapsed   Bandwidth 
+-------------------------------------------------------------------------------------
+  0   Tesla K40c             6.38 MiB        DtoH         659 µs      10146.99 MiB/s 
+  2   Tesla K40c             1.00 KiB        HtoD          25 µs         41.13 MiB/s 
+=====================================================================================
+
+Aggregated total time      :          684 µs
+Aggregated total bandwidth :      9778.98 MiB/s
+Estimated elapsed time     :          698 µs
+Timed total bandwidth      :      9576.82 MiB/s
+
+```
