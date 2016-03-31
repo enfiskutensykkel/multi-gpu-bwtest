@@ -158,6 +158,8 @@ void runBandwidthTest(const vector<TransferSpec>& transferSpecs)
     }
 
 
+    // FIXME: Warn about low compute-capability here instead?
+
     // Print results
     fprintf(stdout, "\n");
     fprintf(stdout, "=====================================================================================\n");

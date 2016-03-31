@@ -58,6 +58,7 @@ static void showUsage(const char* fname)
 
 static void listDevices()
 {
+    // TODO: compute capability
     cudaError_t err;
 
     int deviceCount = 0;
@@ -113,7 +114,7 @@ static bool isValidDevice(int device)
 
     if (prop.major < 3 || (prop.major == 3 && prop.minor < 5))
     {
-        fprintf(stderr, "WARNING: Device %d has compute capability lower than 3.5 which may affect the test\n", device);
+        fprintf(stderr, "WARNING: Compute capability of device %d is lower than 3.5\n", device);
     }
 
     return true;
