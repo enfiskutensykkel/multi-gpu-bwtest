@@ -6,10 +6,9 @@
 #include <cstring>
 #include <cstdio>
 #include "bench.h"
-#include "devbuf.h"
-#include "hostbuf.h"
+#include "buffer.h"
 #include "stream.h"
-#include "event.h"
+#include "timer.h"
 
 using std::vector;
 using std::runtime_error;
@@ -57,13 +56,11 @@ static void timeTransfers(const vector<TransferSpec>& transferSpecs)
     for (const TransferSpec& spec : transferSpecs)
     {
         cudaStream_t stream = *spec.stream;
-        const DeviceBufferPtr& deviceBuffer = spec.deviceBuffer;
-        const HostBufferPtr& hostBuffer = spec.hostBuffer;
 
-        const void* src = spec.direction == cudaMemcpyDeviceToHost ? deviceBuffer->buffer : hostBuffer->buffer;
-        void* dst = spec.direction == cudaMemcpyDeviceToHost ? hostBuffer->buffer : deviceBuffer->buffer;
+        const void* src = spec.direction == cudaMemcpyDeviceToHost ? spec.deviceBuffer.get() : spec.hostBuffer.get();
+        void* dst = spec.direction == cudaMemcpyDeviceToHost ? spec.hostBuffer.get() : spec.deviceBuffer.get();
 
-        err = cudaEventRecord(spec.events->started, stream);
+        err = cudaEventRecord(spec.timer->started, stream);
         if (err != cudaSuccess)
         {
             throw runtime_error(cudaGetErrorString(err));
@@ -75,7 +72,7 @@ static void timeTransfers(const vector<TransferSpec>& transferSpecs)
             throw runtime_error(cudaGetErrorString(err));
         }
 
-        err = cudaEventRecord(spec.events->stopped, stream);
+        err = cudaEventRecord(spec.timer->stopped, stream);
         if (err != cudaSuccess)
         {
             throw runtime_error(cudaGetErrorString(err));
@@ -104,8 +101,8 @@ void runBandwidthTest(const vector<TransferSpec>& transferSpecs)
     cudaError_t err;
 
     // Create timing events on the null stream
-    TimingDataPtr nullStreamTiming = createTimingData();
-    err = cudaEventRecord(nullStreamTiming->started);
+    TimerPtr globalTimer = createTimer();
+    err = cudaEventRecord(globalTimer->started);
     if (err != cudaSuccess)
     {
         throw runtime_error(cudaGetErrorString(err));
@@ -135,13 +132,13 @@ void runBandwidthTest(const vector<TransferSpec>& transferSpecs)
 
         syncStreams(transferSpecs);
 
-        err = cudaEventRecord(nullStreamTiming->stopped);
+        err = cudaEventRecord(globalTimer->stopped);
         if (err != cudaSuccess)
         {
             throw runtime_error(cudaGetErrorString(err));
         }
 
-        err = cudaEventSynchronize(nullStreamTiming->stopped);
+        err = cudaEventSynchronize(globalTimer->stopped);
         if (err != cudaSuccess)
         {
             throw runtime_error(cudaGetErrorString(err));
@@ -170,18 +167,18 @@ void runBandwidthTest(const vector<TransferSpec>& transferSpecs)
 
     size_t totalSize = 0;
     double aggrElapsed = .0;
-    double timedElapsed = nullStreamTiming->usecs();
+    double timedElapsed = globalTimer->usecs();
 
     for (const TransferSpec& res : transferSpecs)
     {
-        double elapsed = res.events->usecs();
+        double elapsed = res.timer->usecs();
         double bandwidth = (double) res.length / elapsed;
 
         totalSize += res.length;
         aggrElapsed += elapsed;
 
         cudaDeviceProp prop;
-        err = cudaGetDeviceProperties(&prop, res.deviceBuffer->device);
+        err = cudaGetDeviceProperties(&prop, res.device);
         if (err != cudaSuccess)
         {
             prop.name[0] = 'E';
@@ -192,7 +189,7 @@ void runBandwidthTest(const vector<TransferSpec>& transferSpecs)
         }
 
         fprintf(stdout, " %2d   %-15s   %13s    %8s   %9.0f µs    %10.2f MiB/s \n",
-                res.deviceBuffer->device, 
+                res.device, 
                 prop.name, 
                 bytesToUnit(res.length).c_str(), 
                 transferDirectionToString(res.direction).c_str(),

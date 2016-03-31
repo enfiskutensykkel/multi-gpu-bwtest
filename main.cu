@@ -8,10 +8,10 @@
 #include <vector>
 #include <exception>
 #include <stdexcept>
-#include "devbuf.h"
-#include "hostbuf.h"
+#include "buffer.h"
 #include "bench.h"
-#include "event.h"
+#include "timer.h"
+#include "stream.h"
 
 using namespace std;
 
@@ -24,31 +24,33 @@ static void showUsage(const char* fname)
             "    This program uses multiple CUDA streams in an attempt at optimizing data\n"
             "    transfers between host and multiple CUDA devices using cudaMemcpyAsync().\n"
             "\nProgram options\n"
-            "  --streams=<mode>      stream modes for transfers\n"
-            "  --list               list available CUDA devices and quit\n"
-            "  --help               show this help text and quit\n"
+            "  --do=<transfer specs>    transfer specification\n"
+            "  --streams=<mode>         stream modes for transfers\n"
+            "  --list                   list available CUDA devices and quit\n"
+            "  --help                   show this help text and quit\n"
             "\nStream modes\n"
-            "  per-transfer         one stream per transfer [default]\n"
-            "  per-device           transfers to the same device share streams\n"
-            "  only-one             all transfers share the same single stream\n"
-            "\nTransfer specification format\n"
-            "    <device>[:<direction>][:<size>][:<memory options>...]\n"
+            "  per-transfer             one stream per transfer [default]\n"
+            "  per-device               transfers to the same device share streams\n"
+            "  only-one                 all transfers share the same single stream\n"
+            "\nTransfer specification format\n\n"
+            "       <device>[:<direction>][:<size>][:<memory options>...]\n"
             "\nTransfer specification arguments\n"
-            "  <device>             CUDA device to use for transfer\n"
-            "  <direction>          transfer directions\n"
-            "  <size>               transfer size in bytes [default is 32 MiB]\n"
-            "  <memory options>     memory allocation options\n"
+            "  <device>                 CUDA device to use for transfer\n"
+            "  <direction>              transfer directions\n"
+            "  <size>                   transfer size in bytes [default is 32 MiB]\n"
+            "  <memory options>         memory allocation options\n"
             "\nTransfer directions\n"
-            "  HtoD                 host to device transfer (RAM to GPU)\n"
-            "  DtoH                 device to host transfer (GPU to RAM)\n"
-            "  both                 first HtoD then DtoH [default]\n"
-            "  reverse              first DtoH then HtoD\n"
-            "\nMemory options format\n"
-            "   option1,option2,option3,...\n"
+            "  HtoD                     host to device transfer (RAM to GPU)\n"
+            "  DtoH                     device to host transfer (GPU to RAM)\n"
+            "  both                     first HtoD then DtoH [default]\n"
+            "  reverse                  first DtoH then HtoD\n"
+            "\nMemory options format\n\n"
+            "       option1,option2,option3,...\n"
             "\nMemory options\n"
-            "  mapped               map host memory into CUDA address space\n"
-            "  managed              allocate managed memory on the device\n"
-            "  wc                   allocate write-combined memory on the host\n"
+            "  mapped                   map host memory into CUDA address space\n"
+            //"  portable                 make host memory available in all contexts\n"
+            "  wc                       allocate write-combined memory on the host\n"
+            //"  managed                  allocate managed memory on the device\n"
             "\n"
             ,
             fname
@@ -254,9 +256,9 @@ static void parseTransferSpecification(vector<TransferSpec>& transferSpecs, char
             {
                 TransferSpec spec;
                 spec.device = device;
+                spec.deviceBuffer = createDeviceBuffer(device, size); // FIXME: Managed memory
+                spec.hostBuffer = createHostBuffer(size, hostAllocFlags);
                 spec.length = size;
-                spec.deviceBuffer = DeviceBufferPtr(new DeviceBuffer(device, size)); // FIXME: Managed memory
-                spec.hostBuffer = HostBufferPtr(new HostBuffer(size, hostAllocFlags));
                 spec.direction = transferMode;
 
                 transferSpecs.push_back(spec);
@@ -371,8 +373,8 @@ int main(int argc, char** argv)
         // Create streams and timing events
         for (TransferSpec& spec : transferSpecs)
         {
-            spec.stream = retrieveStream(spec.deviceBuffer->device, streamMode); // FIXME: we need a better model for streams
-            spec.events = createTimingData();
+            spec.stream = retrieveStream(spec.device, streamMode); // FIXME: we need a better model for streams
+            spec.timer = createTimer();
         }
 
         // Run bandwidth test

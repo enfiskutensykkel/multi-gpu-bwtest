@@ -2,21 +2,20 @@
 #define __BENCHMARK_H__
 
 #include <cuda.h>
-#include "devbuf.h"
-#include "hostbuf.h"
+#include "buffer.h"
 #include "stream.h"
-#include "event.h"
+#include "timer.h"
 
 
 struct TransferSpec
 {
     int             device;
+    BufferPtr       deviceBuffer;
+    BufferPtr       hostBuffer;
     size_t          length;
-    DeviceBufferPtr deviceBuffer;
-    HostBufferPtr   hostBuffer;
-    StreamPtr       stream;
     cudaMemcpyKind  direction;
-    TimingDataPtr   events;
+    StreamPtr       stream;
+    TimerPtr        timer;
 };
 
 

@@ -2,44 +2,43 @@
 #include <memory>
 #include <exception>
 #include <stdexcept>
-#include "event.h"
+#include "timer.h"
 
 
-static void deleteTimingData(TimingData* data)
+static void deleteTimer(Timer* timer)
 {
-    cudaEventDestroy(data->started);
-    cudaEventDestroy(data->stopped);
-    delete data;
+    cudaEventDestroy(timer->started);
+    cudaEventDestroy(timer->stopped);
+    delete timer;
 }
 
 
-TimingDataPtr createTimingData()
+TimerPtr createTimer()
 {
     cudaError_t err;
 
-    TimingData* data = new TimingData;
+    Timer* timer = new Timer;
 
-    err = cudaEventCreate(&data->started);
+    err = cudaEventCreate(&timer->started);
     if (err != cudaSuccess)
     {
-        delete data;
+        delete timer;
         throw std::runtime_error(cudaGetErrorString(err));
     }
 
-    err = cudaEventCreate(&data->stopped);
+    err = cudaEventCreate(&timer->stopped);
     if (err != cudaSuccess)
     {
-        cudaEventDestroy(data->started);
-        delete data;
+        cudaEventDestroy(timer->started);
+        delete timer;
         throw std::runtime_error(cudaGetErrorString(err));
     }
 
-    return TimingDataPtr(data, &deleteTimingData);
+    return TimerPtr(timer, &deleteTimer);
 }
 
 
-
-double TimingData::usecs() const
+double Timer::usecs() const
 {
     float milliseconds = .0f;
 
@@ -51,3 +50,4 @@ double TimingData::usecs() const
 
     return (double) milliseconds * 1000;
 }
+
