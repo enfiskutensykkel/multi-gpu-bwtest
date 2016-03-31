@@ -8,8 +8,6 @@
 using std::runtime_error;
 typedef std::map<int, StreamPtr> StreamMap;
 
-static StreamMap streams; // FIXME: this neads to be cleared, maybe rewrite into passing it around?
-
 
 static void deleteStream(cudaStream_t* stream)
 {
@@ -34,11 +32,11 @@ static StreamPtr createStream()
 }
 
 
-StreamPtr retrieveStream(int device, StreamSharingMode sharing)
+StreamPtr StreamManager::retrieveStream(int device)
 {
-    if (sharing != perTransfer)
+    if (mode != perTransfer)
     {
-        if (sharing == singleStream)
+        if (mode == singleStream)
         {
             device = -1;
         }
@@ -60,3 +58,8 @@ StreamPtr retrieveStream(int device, StreamSharingMode sharing)
     return createStream();
 }
 
+
+StreamManager::StreamManager(StreamSharingMode mode)
+    : mode(mode)
+{
+}

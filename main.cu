@@ -360,6 +360,8 @@ int main(int argc, char** argv)
         return e;
     }
 
+    StreamManager streamManager(streamMode);
+
     try
     {
         // No transfer specifications?
@@ -373,7 +375,7 @@ int main(int argc, char** argv)
         // Create streams and timing events
         for (TransferSpec& spec : transferSpecs)
         {
-            spec.stream = retrieveStream(spec.device, streamMode); // FIXME: we need a better model for streams
+            spec.stream = streamManager.retrieveStream(spec.device);
             spec.timer = createTimer();
         }
 

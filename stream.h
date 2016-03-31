@@ -3,6 +3,7 @@
 
 #include <cuda.h>
 #include <memory>
+#include <map>
 
 
 enum StreamSharingMode
@@ -16,6 +17,16 @@ enum StreamSharingMode
 typedef std::shared_ptr<cudaStream_t> StreamPtr;
 
 
-StreamPtr retrieveStream(int cudaDevice, StreamSharingMode streamSharing);
+class StreamManager
+{
+    public:
+        explicit StreamManager(StreamSharingMode streamMode);
+
+        StreamPtr retrieveStream(int device);
+
+    private:
+        StreamSharingMode mode;
+        std::map<int, StreamPtr> streams;
+};
 
 #endif
