@@ -111,6 +111,11 @@ static bool isValidDevice(int device)
         return false;
     }
 
+    if (prop.major < 3 || (prop.major == 3 && prop.minor < 5))
+    {
+        fprintf(stderr, "WARNING: Device %d has compute capability lower than 3.5 which may affect the test\n", device);
+    }
+
     return true;
 }
 
