@@ -28,7 +28,7 @@ parallel for some reason.
 Usage
 -------------------------------------------------------------------------------
 ```
-Usage: ./bwtest --do=<transfer specs>... [--streams=<mode>]
+Usage: ./bwtest [--do=<transfer specs>...] [--streams=<mode>]
 
 Description
     This program uses multiple CUDA streams in an attempt at optimizing data
