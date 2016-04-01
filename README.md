@@ -10,13 +10,20 @@ seems that the CUDA driver will only transfer simultaneously if the transfer
 is slow enough.
 
 
-Requirements
+Requirements and remarks
 -------------------------------------------------------------------------------
   - One or more CUDA capabable devices (NVIDIA GPUs)
   - CUDA version 7.0 or higher
-  - `gcc` or `clang` with support for C++11
+  - GCC or Clang with support for C++11
   - Make (for example GNU Make)
 
+I've tested it on both Mac OS X 10.11.3 and 10.11.4, as well as 
+Ubuntu 14.04.04. It compiles with GCC version 4.8.4 and LLVM 7.0.2 and 
+LLVM 7.2.0.
+
+I've also noticed that using NVIDIA GPUs with compute capability lower 
+than 3.5 messes up the results because CUDA is not able to start things in
+parallel for some reason.
 
 Usage
 -------------------------------------------------------------------------------
@@ -68,13 +75,13 @@ Example runs
 ```
 jonas@alpha:~/multi-gpu-bwtest$ ./bwtest --list
 
- ID   Device name            IO addr      Managed    Unified   Mappable    #
------------------------------------------------------------------------------
-  0   Tesla K40c             08:00.0          yes        yes        yes    2
-  1   Quadro K2200           03:00.0          yes        yes        yes    1
-  2   Tesla K40c             04:00.0          yes        yes        yes    2
-  3   GeForce GTX 750        04:01.0          yes        yes        yes    1
-  4   Quadro K2000           04:02.0          yes        yes        yes    1
+ ID   Device name       IO addr     Compute   Managed   Unified   Mappable    #
+-------------------------------------------------------------------------------
+  0   Tesla K40c        08:00.0        3.5        yes       yes        yes    2
+  1   Quadro K2200      03:00.0        5.0        yes       yes        yes    1
+  2   Tesla K40c        04:00.0        3.5        yes       yes        yes    2
+  3   GeForce GTX 750   04:01.0        5.0        yes       yes        yes    1
+  4   Quadro K2000      04:02.0        3.0        yes       yes        yes    1
 
 jonas@alpha:~/multi-gpu-bwtest$ ./bwtest --do=all:1024:both
 Allocating buffers......DONE
