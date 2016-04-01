@@ -198,8 +198,8 @@ static void parseTransferSpecification(vector<TransferSpec>& transferSpecs, char
     size_t size = 0;
 
     unsigned int hostAllocFlags = cudaHostAllocDefault;
-    unsigned int deviceAllocFlags = 0;
-    bool useManagedDeviceMem = false;
+//    unsigned int deviceAllocFlags = 0;
+//    bool useManagedDeviceMem = false;
 
     // First token must be device
     const char* delim = ":,";
@@ -223,10 +223,10 @@ static void parseTransferSpecification(vector<TransferSpec>& transferSpecs, char
         {
             hostAllocFlags |= cudaHostAllocWriteCombined;
         }
-        else if (strcasecmp("managed", token) == 0)
-        {
-            useManagedDeviceMem = true;
-        }
+//        else if (strcasecmp("managed", token) == 0)
+//        {
+//            useManagedDeviceMem = true;
+//        }
 
         if (size == 0)
         {
