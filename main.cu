@@ -12,6 +12,7 @@
 #include "bench.h"
 #include "timer.h"
 #include "stream.h"
+#include "device.h"
 
 using namespace std;
 
@@ -60,15 +61,7 @@ static void showUsage(const char* fname)
 
 static void listDevices()
 {
-    // TODO: compute capability
-    cudaError_t err;
-
-    int deviceCount = 0;
-    err = cudaGetDeviceCount(&deviceCount);
-    if (err != cudaSuccess)
-    {
-        throw runtime_error(cudaGetErrorString(err));
-    }
+    const int deviceCount = countDevices();
 
     fprintf(stderr, "\n %2s   %-15s   %-9s   %7s   %7s   %7s   %8s   %2s\n",
             "ID", "Device name", "IO addr", "Compute", "Managed", "Unified", "Mappable", "#");
@@ -76,51 +69,20 @@ static void listDevices()
     for (int i = 0; i < deviceCount; ++i)
     {
         cudaDeviceProp prop;
+        loadDeviceProperties(i, prop);
 
-        err = cudaGetDeviceProperties(&prop, i);
-        if (err != cudaSuccess)
+        if (isDeviceValid(i))
         {
-            throw runtime_error(cudaGetErrorString(err));
+            fprintf(stderr, " %2d   %-15s   %02x:%02x.%-3x   %4d.%-2d   %7s   %7s   %8s   %2d\n",
+                    i, prop.name, prop.pciBusID, prop.pciDeviceID, prop.pciDomainID,
+                    prop.major, prop.minor, 
+                    prop.managedMemory ? "yes" : "no", 
+                    prop.unifiedAddressing ? "yes" : "no",
+                    prop.canMapHostMemory ? "yes" : "no",
+                    prop.asyncEngineCount);
         }
-
-        if (prop.computeMode == cudaComputeModeProhibited)
-        {
-            continue;
-        }
-
-        fprintf(stderr, " %2d   %-15s   %02x:%02x.%-3x   %4d.%-2d   %7s   %7s   %8s   %2d\n",
-                i, prop.name, prop.pciBusID, prop.pciDeviceID, prop.pciDomainID,
-                prop.major, prop.minor, 
-                prop.managedMemory ? "yes" : "no", 
-                prop.unifiedAddressing ? "yes" : "no",
-                prop.canMapHostMemory ? "yes" : "no",
-                prop.asyncEngineCount);
     }
     fprintf(stderr, "\n");
-}
-
-
-static bool isValidDevice(int device)
-{
-    cudaDeviceProp prop;
-
-    cudaError_t err = cudaGetDeviceProperties(&prop, device);
-    if (err != cudaSuccess)
-    {
-        return false;
-    }
-
-    if (prop.computeMode == cudaComputeModeProhibited)
-    {
-        return false;
-    }
-
-    if (prop.major < 3 || (prop.major == 3 && prop.minor < 5))
-    {
-        fprintf(stderr, "WARNING: Compute capability of device %d is lower than 3.5\n", device);
-    }
-
-    return true;
 }
 
 
@@ -130,25 +92,27 @@ static void parseDevice(vector<int>& devices, const char* token)
     {
         char* strptr = NULL;
         int device = strtol(token, &strptr, 10);
-        if (strptr == NULL || *strptr != '\0' || !isValidDevice(device))
+        if (strptr == NULL || *strptr != '\0' || !isDeviceValid(device))
         {
             fprintf(stderr, "Invalid transfer specification: '%s' is not a valid device\n", token);
             throw 3;
         }
         devices.push_back(device);
+
+        cudaDeviceProp prop;
+        loadDeviceProperties(device, prop);
+        if (prop.major < 3 || (prop.major == 3 && prop.minor < 5))
+        {
+            fprintf(stderr, "WARNING: Compute capability of device %d is lower than 3.5\n", device);
+        }
     }
     else
     {
-        int deviceCount = 0;
-        cudaError_t err = cudaGetDeviceCount(&deviceCount);
-        if (err != cudaSuccess)
-        {
-            throw runtime_error(cudaGetErrorString(err));
-        }
+        const int deviceCount = countDevices();
 
         for (int device = 0; device < deviceCount; ++device)
         {
-            if (isValidDevice(device))
+            if (isDeviceValid(device))
             {
                 devices.push_back(device);
             }

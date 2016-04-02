@@ -1,6 +1,6 @@
 PROJECT := bwtest
-OBJECTS	:= main.o bench.o buffer.o stream.o timer.o
-DEPS	:= buffer.h stream.h timer.h bench.h
+OBJECTS	:= main.o bench.o buffer.o stream.o timer.o device.o
+DEPS	:= buffer.h stream.h timer.h bench.h device.h
 CFLAGS  := -Wall -Wextra 
 NVCC    := /usr/local/cuda/bin/nvcc
 
