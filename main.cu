@@ -116,6 +116,13 @@ static void parseDevice(vector<int>& devices, const char* token)
             {
                 devices.push_back(device);
             }
+
+            cudaDeviceProp prop;
+            loadDeviceProperties(device, prop);
+            if (prop.major < 3 || (prop.major == 3 && prop.minor < 5))
+            {
+                fprintf(stderr, "WARNING: Compute capability of device %d is lower than 3.5\n", device);
+            }
         }
     }
 }
