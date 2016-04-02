@@ -15,6 +15,8 @@ using std::runtime_error;
 using std::string;
 
 
+// Helper function to "round up" units
+// Example 1024 B becomes 1 KiB
 static string bytesToUnit(size_t size)
 {
     char buffer[1024];
@@ -34,6 +36,7 @@ static string bytesToUnit(size_t size)
 }
 
 
+// Helper function to get a string representation of a transfer direction
 static string transferDirectionToString(cudaMemcpyKind direction)
 {
     if (direction == cudaMemcpyHostToDevice)
@@ -49,6 +52,7 @@ static string transferDirectionToString(cudaMemcpyKind direction)
 }
 
 
+// Execute transfers and time them
 static void timeTransfers(const vector<TransferSpec>& transferSpecs)
 {
     cudaError_t err;
@@ -81,6 +85,7 @@ static void timeTransfers(const vector<TransferSpec>& transferSpecs)
 }
 
 
+// Wait for all streams to complete
 static void syncStreams(const vector<TransferSpec>& transferSpecs)
 {
     cudaError_t err;
