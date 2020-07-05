@@ -1,8 +1,10 @@
+CUDA_PATH ?= /usr/local/cuda
+
 PROJECT := bwtest
 OBJECTS	:= main.o bench.o buffer.o stream.o timer.o device.o
 DEPS	:= buffer.h stream.h timer.h bench.h device.h
 CFLAGS  := -Wall -Wextra 
-NVCC    := /usr/local/cuda/bin/nvcc
+NVCC    := $(CUDA_PATH)/bin/nvcc
 
 ifeq ($(shell uname -s),Darwin)
 CCDIR	:= /Library/Developer/CommandLineTools/usr/bin/
@@ -11,7 +13,7 @@ else
 CCDIR   := /usr/bin/g++
 endif
 
-INCLUDE	:= /usr/local/cuda/include 
+INCLUDE	:= $(CUDA_PATH)/include 
 
 .PHONY: all clean $(PROJECT)
 
